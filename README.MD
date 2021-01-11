@@ -12,5 +12,5 @@
 
 - Date：2021/1/5
 - Author：aleestar
-- Email：service@aleestar.cn
+- Email：service@mail.aleestar.cn
 - WebSite：https://aleestar.cn

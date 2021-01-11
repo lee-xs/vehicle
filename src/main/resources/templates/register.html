@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>车辆号管理系统-注册</title>
+    <style>
+        #container{
+            width: 600px;
+            margin: 230px auto 0;
+            text-align: center;
+        }
+        input{
+            width: 250px;
+            height: 35px;
+            margin-bottom: 15px;
+        }
+        #register{
+            width: 260px;
+            height: 40px;
+            margin-bottom: 15px;
+            background-color: rgba(0, 255, 255, 0.65);
+            border: 0.5px solid #cccccc;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <input type="text" name="username" placeholder="请输入用户名" /><br/>
+        <input type="password" name="password" placeholder="请输入密码" /><br/>
+        <input type="password" name="affirmPassword" placeholder="请输入确认密码" /><br/>
+        <button id="register">注册</button><br/>
+        <a href="/login">已有账号，去登陆</a>
+    </div>
+</body>
+<script src="/static/jquery-3.4.1.js"></script>
+<script>
+    $(document).ready(function () {
+        $("#register").click(function () {
+            if($("input[name='username']").val() == "" || $("input[name='password']").val() == "" || $("input[name='affirmPassword']").val() == ""){
+                alert("必填项不能为空");
+                return;
+            }
+
+            if($("input[name='password']").val() != $("input[name='affirmPassword']").val()){
+                alert("密码与确认密码不一致");
+                return;
+            }
+
+            $.ajax({
+                type: "POST",
+                url: "/user/register",
+                data: {
+                    "username": $("input[name='username']").val(),
+                    "password": $("input[name='password']").val()
+                },
+                dataType: "json",
+                success: function (res) {
+                    alert(res.message);
+                }
+            })
+        })
+    })
+</script>
+</html>

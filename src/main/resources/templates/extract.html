@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th=" http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>车辆号管理系统-抽取车牌</title>
+    <style>
+        #container{
+            width: 750px;
+            margin: 100px auto 0;
+            text-align: center;
+        }
+        #startOrEnd{
+            margin: 20px;
+            padding: 15px 30px;
+            background-color: rgba(0, 255, 255, 0.65);
+            border: 0.5px solid #cccccc;
+        }
+        #data{
+            width: 100%;
+            height: 120px;
+            display: none;
+            color: cornflowerblue;
+        }
+        .card{
+            width: 140px;
+            height: 40px;
+            line-height: 40px;
+            margin: 5px 4px;
+            background-color: bisque;
+            text-align: center;
+            border: 0.5px solid #cccccc;
+            float: left;
+        }
+        .card:hover{
+            background-color: coral;
+        }
+        #bottom{
+            width: 100%;
+            text-align: center;
+            margin: auto;
+        }
+        #submit, #reset{
+            display: none;
+            margin: 0 20px;
+            padding: 15px 30px;
+            background-color: rgba(0, 255, 255, 0.65);
+            border: 0.5px solid #cccccc;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="user">
+            <span th:text="'用户名：' + ${session.user.username}"></span>
+            <span id="vehicleNumber" th:text="'车牌号：' + ${session.user.vehicleNumber == null? '暂无车牌号':session.user.vehicleNumber}"></span>
+        </div>
+        <button id="startOrEnd">开始抽取</button>
+        <div id="data">
+            <div class="card" id="card0"></div>
+            <div class="card" id="card1"></div>
+            <div class="card" id="card2"></div>
+            <div class="card" id="card3"></div>
+            <div class="card" id="card4"></div>
+            <div class="card" id="card5"></div>
+            <div class="card" id="card6"></div>
+            <div class="card" id="card7"></div>
+            <div class="card" id="card8"></div>
+            <div class="card" id="card9"></div>
+        </div>
+        <div id="bottom">
+            <div id="option">
+                <button id="submit">确认选取</button>
+                <button id="reset">重置选择</button>
+            </div>
+            <p><a href="/index">返回主页</a></p>
+        </div>
+    </div>
+</body>
+<script src="/static/jquery-3.4.1.js"></script>
+<script th:inline="javascript">
+    $(document).ready(function () {
+        let user = [[${session.user}]], list = null, data = null, timer = null, vehicleNumber = null;
+        $.ajax({
+            type: "GET",
+            url: "/mark/list",
+            dataType: "json",
+            success: function (res) {
+                if(res.code == 200){
+                    list = res.data
+                    data = new Array(10);
+                    for(let i = 0; i < 10; i++){
+                        data[i] = list.slice(list.length / 10 * i, list.length / 10 * (i + 1))
+                    }
+                }
+            }
+        })
+
+        $("#startOrEnd").click(function () {
+            $("#data").css("display", "block")
+            if($(this).text() == "开始抽取"){
+                $(this).text("停止抽取");
+                $("#submit").css("display", "none");
+                $("#reset").css("display", "none");
+                reset();
+                timer = setInterval(function () {
+                    for(let i = 0; i < 10; i++){
+                        $("#card" + i).text(data[i][Math.floor(Math.random()*data[i].length)].vehicleNumber)
+                    }
+                }, 100)
+            }else if($(this).text() == "停止抽取"){
+                $(this).text("开始抽取");
+                $("#submit").css("display", "inline-block");
+                $("#reset").css("display", "inline-block");
+                clearInterval(timer);
+            }
+        })
+
+        $(".card").click(function () {
+            if($("#startOrEnd").text() == "停止抽取"){
+                alert("请先停止抽取后在进行选择")
+                return;
+            }
+            vehicleNumber = $(this).text();
+            $(this).css("background-color", "red");
+            $(this).siblings().css("background-color", "bisque");
+        })
+
+        $("#submit").click(function () {
+            if(vehicleNumber == "" || vehicleNumber == null){
+                alert("请选择车牌号码");
+                return;
+            }
+            $.ajax({
+                type: "PUT",
+                url: "/user/apply",
+                data: {
+                    "id": user.id,
+                    "vehicleNumber": vehicleNumber,
+                },
+                dataType: "json",
+                success: function (res) {
+                    alert(res.message);
+                    user = res.data;
+                    $("#vehicleNumber").text('车牌号：' + user.vehicleNumber);
+                    reset();
+                }
+            })
+        })
+
+        $("#reset").click(function () {
+            reset();
+        })
+
+        //重置选择数据
+        function reset() {
+            vehicleNumber = $(this).text();
+            $(".card").css("background-color", "bisque");
+        }
+    })
+</script>
+</html>

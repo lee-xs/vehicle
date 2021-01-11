@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th=" http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>车辆号管理系统-选取车牌</title>
+    <style>
+        #container{
+            width: 800px;
+            margin: 100px auto 0;
+            text-align: center;
+        }
+        input{
+            width: 250px;
+            height: 35px;
+            margin: 15px 0;
+        }
+        #search{
+            width: 260px;
+            height: 40px;
+            margin-bottom: 15px;
+            background-color: rgba(0, 255, 255, 0.65);
+            border: 0.5px solid #cccccc;
+        }
+        table, tr, th, td{
+            border: 1px solid black;
+            border-collapse:collapse;
+        }
+        table{
+            width: 100%;
+        }
+        th{
+            width: 200px;
+            padding: 5px 0;
+            background-color: coral;
+        }
+        td{
+            width: 200px;
+            padding: 5px 0;
+            background-color: darksalmon;
+        }
+        #list{
+            display: none;
+        }
+        #bottom{
+            width: 100%;
+            text-align: center;
+            margin: auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <div id="user">
+            <span th:text="'用户名：' + ${session.user.username}"></span>
+            <span id="vehicleNumber" th:text="'车牌号：' + ${session.user.vehicleNumber == null? '暂无车牌号':session.user.vehicleNumber}"></span>
+        </div>
+        <div id="search-container">
+            <input type="text" name="search" placeholder="请输入车牌号，支持模糊搜索"/><br/>
+            <button id="search">搜索</button>
+        </div>
+        <table id="list">
+            <thead>
+                <tr>
+                    <th>序号</th>
+                    <th>车牌号</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+        <div id="bottom">
+            <p><a href="/index">返回主页</a></p>
+        </div>
+    </div>
+</body>
+<script src="/static/jquery-3.4.1.js"></script>
+<script th:inline="javascript">
+    let user = [[${session.user}]];
+
+    $(document).ready(function () {
+        $("#search").click(function () {
+            if($("input[name = 'search']").val() == ""){
+                alert("请输入搜索的车牌号，支持模糊搜索")
+                return;
+            }
+
+            $.ajax({
+                type: "GET",
+                url: "/mark/search",
+                data: {
+                    "search": $("input[name = 'search']").val()
+                },
+                dataType: "json",
+                success: function(res){
+                    if(res.data.length <= 0){
+                        alert("没有相关数据");
+                        $("#list").css("display", "none")
+                        $("#list tbody").empty();
+                        return;
+                    }
+                    const data = res.data
+                    $("#list").css("display", "block")
+                    $("#list tbody").empty();
+                    data.forEach(item => {
+                        $("#list tbody").append(`<tr><td>${item.id}</td><td>${item.vehicleNumber}</td><td>${item.status == "0"? "正常":"被使用"}</td><td><button onclick="handle('`+ item.vehicleNumber +`')">选取</button></td></tr>`)
+                    })
+                }
+            })
+        })
+    })
+
+    function handle(vehicleNumber){
+        $.ajax({
+            type: "PUT",
+            url: "/user/apply",
+            data: {
+                "id": user.id,
+                "vehicleNumber": vehicleNumber,
+            },
+            dataType: "json",
+            success: function (res) {
+                alert(res.message);
+                user = res.data;
+                $("#vehicleNumber").text('车牌号：' + vehicleNumber);
+            }
+        })
+    }
+</script>
+</html>
